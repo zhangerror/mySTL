@@ -20,12 +20,15 @@ __MYSTL_NAMESPACE_BEGIN_
 	template <class T, class Ref, class Ptr>
 	struct __list_iterator {
 		typedef __list_iterator<T, T&, T*>		iterator;
+		typedef __list_iterator<T, const T&, const T*>		const_iterator;
 		typedef __list_iterator<T, Ref, Ptr>	self;
 
 		typedef bidirectional_iterator_tag		iterator_category;
 		typedef T								value_type;
 		typedef Ptr								pointer;
+		typedef const Ptr						const_pointer;
 		typedef Ref								reference;
+		typedef const Ref						const_reference;
 		typedef __list_node<T>*					link_type;
 		typedef size_t							size_type;
 		typedef ptrdiff_t						difference_type;
@@ -81,7 +84,9 @@ __MYSTL_NAMESPACE_BEGIN_
 		typedef typename __list_iterator<T, T&, T*>::iterator_category	category;
 		typedef typename __list_iterator<T, T&, T*>::value_type			value_type;
 		typedef typename __list_iterator<T, T&, T*>::pointer			pointer;
+		typedef typename __list_iterator<T, T&, T*>::const_pointer		const_pointer;
 		typedef typename __list_iterator<T, T&, T*>::reference			reference;
+		typedef typename __list_iterator<T, T&, T*>::const_reference	const_reference;
 		typedef typename __list_iterator<T, T&, T*>::size_type			size_type;
 		typedef typename __list_iterator<T, T&, T*>::difference_type	difference_type;
 
@@ -130,10 +135,10 @@ __MYSTL_NAMESPACE_BEGIN_
 			destroy_node(node);
 		}
 
-		iterator begin() { return (link_type)((*node).next); }
-		iterator end() { return node; }
+		iterator begin() const { return (link_type)((*node).next); }
+		iterator end() const { return node; }
 		bool empty() const { return node->next == node; }
-		size_type size() {
+		size_type size() const {
 			return distance(begin(), end(), category());	//global
 		}
 		//取头节点的内容(元素值)

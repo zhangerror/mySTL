@@ -16,6 +16,7 @@ __MYSTL_NAMESPACE_BEGIN_
 		typedef value_type*	pointer;
 		typedef value_type*	iterator;
 		typedef value_type&	reference;
+		typedef const value_type&	const_reference;
 		typedef size_t		size_type;
 		typedef ptrdiff_t	difference_type;
 	protected:

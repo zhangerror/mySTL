@@ -70,14 +70,14 @@ __MYSTL_NAMESPACE_BEGIN_
 		explicit vector(size_type n) { file_initialize(n, T()); }
 		vector(const vector<T>& x) {				//拷贝构造函数
 			fill_initialize(x.size(), T());
-			for (int i = 0; i < size(); ++i)
+			for (size_type i = 0; i < size(); ++i)
 				*(start + i) = *(x.start + i);
 		}
 		/* 列表初始化 */
 		vector(std::initializer_list<T> init_list) {
 			fill_initialize(init_list.size(), T());
 			auto beg = init_list.begin();
-			for (int i = 0; i < size(); ++i)
+			for (size_type i = 0; i < size(); ++i)
 				*(start + i) = *(beg + i);
 		}
 

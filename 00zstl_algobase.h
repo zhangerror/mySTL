@@ -334,6 +334,11 @@ __MYSTL_NAMESPACE_BEGIN_
 		bool operator()(const T& x, const T& y) const { return x < y; }
 	};
 
+	template<class T> 
+	struct greater :public binary_function<T, T, bool> {
+		bool operator()(const T& x, const T& y) const { return x > y; }
+	};
+
 
 	/* 证同(identity)、选择(select)、投射(project)函数 */
 	template<class T>

@@ -31,6 +31,9 @@
 - 06zstl_heap_fix.h：heap 的另一套实现，使 heap 成为一个类，接受大小比较标准指定
 
 - 07zstl_priority_queue.h：优先级队列的实现，使用类形式的 heap ，priority_queue 是一个配接器而不是一个容器，完全以底部容器(默认为 vector )为根据，再加上 heap 的处理规则
+
+- 08zstl_slist.h：单向链表，与 list 最大的区别在于，它的迭代器属于单向的ForwardIterator，而 list 是双向迭代器BidirectionalIterator，但slist消耗的空间更少。slist 的插入、移除、接合等操作不会使原有的迭代器失效。
+
 ## Enviroment
 - OS: Win10
 - tool: VS2017

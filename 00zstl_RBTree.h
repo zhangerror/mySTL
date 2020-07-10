@@ -2,6 +2,7 @@
 #define _ZSTL_RBTREE_H_
 
 #include <iostream>
+#include "00zstl_pair.h"
 #include "00zstl_alloc.h"
 #include "00zstl_construct.h"
 #include "00zstl_algobase.h"
@@ -294,8 +295,8 @@ __MYSTL_NAMESPACE_BEGIN_
 
 		link_type __copy(link_type x);
 
-		std::pair<iterator, iterator> equal_range(const Key& k) {
-			return std::pair<iterator, iterator>(lower_bound(k), upper_bound(k));
+		pair<iterator, iterator> equal_range(const Key& k) {
+			return pair<iterator, iterator>(lower_bound(k), upper_bound(k));
 		}
 		iterator lower_bound(const Key& k) {
 			link_type _y = header;		//最后一个 comp(nodeValue, k) 为假的节点
@@ -332,7 +333,7 @@ __MYSTL_NAMESPACE_BEGIN_
 
 	public:
 		// insert / erase
-		std::pair<iterator, bool> insert_unique(const value_type& x);
+		pair<iterator, bool> insert_unique(const value_type& x);
 		template <class InputIterator>
 		void insert_unique(InputIterator first, InputIterator last) {
 			for (; first != last; ++first) {
@@ -434,7 +435,7 @@ __MYSTL_NAMESPACE_BEGIN_
 	//插入新值：节点键值不允许重复，若重复则插入无效
 	//注意，返回值是个 pair，第一元素是个 RB-tree 迭代器，指向新增节点，第二元素表示插入成功与否
 	template<class Key, class Value, class KeyOfValue, class Compare, class Alloc>
-	std::pair<typename rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::iterator,bool>
+	pair<typename rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::iterator,bool>
 		rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::insert_unique(const value_type& v) {
 		link_type y = header;
 		link_type x = root();	//从根节点开始
@@ -449,7 +450,7 @@ __MYSTL_NAMESPACE_BEGIN_
 		iterator j = iterator(y);		//令迭代器 j 指向插入点的父节点 y
 		if (comp) {						//如果离开 while 循环时 comp 为真(表示遇“大”，将插入于左侧)
 			if (j == begin()) {			//如果插入点的父节点为最左节点
-				return std::pair<iterator, bool>(__insert(x, y, v), true);
+				return pair<iterator, bool>(__insert(x, y, v), true);
 				//以上，x 为插入点，y 为插入点的父节点，v 为新值
 			}
 			else {						//否则(插入点的父节点不为最左节点
@@ -458,12 +459,12 @@ __MYSTL_NAMESPACE_BEGIN_
 		}
 		if (key_compare(key(j.node), KeyOfValue()(v))) {
 			//小于新值(表示遇“小”，将插入于右侧
-			return std::pair<iterator, bool>(__insert(x, y, v), true);
+			return pair<iterator, bool>(__insert(x, y, v), true);
 			//以上，x 为新值插入点， y 为插入点的父节点，v 为新值
 		}
 
 		//进行至此，表示新值一定与树中键值重复，就不应该插入新值
-		return std::pair<iterator, bool>(j, false);
+		return pair<iterator, bool>(j, false);
 	}
 
 	template<class Key, class Value, class KeyOfValue, class Compare, class Alloc>
@@ -829,7 +830,7 @@ __MYSTL_NAMESPACE_BEGIN_
 	template <class Key, class Value, class KeyOfValue, class Compare, class Alloc>
 	//typename rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::size_type
 		void rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::erase(const Key& x) {
-		std::pair<iterator, iterator> _p = equal_range(x);
+		pair<iterator, iterator> _p = equal_range(x);
 		size_type _n = 0;
 		//distance(_p.first, _p.second, _n);
 		erase(_p.first, _p.second);

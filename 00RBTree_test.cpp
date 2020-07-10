@@ -38,11 +38,11 @@ int main() {
 	std::cout << std::endl;
 
 	itree.insert_equal(5);
-	std::cout << "count(5) : " << itree.count(5) << std::endl;
+	std::cout << "count(5) : " << itree.count(5) << std::endl;	//2
 	it = itree.begin();
 	std::cout << "RBTree: ";
 	for (; it != itree.end(); ++it) {
-		std::cout << *it << ' ';			//5 6 7 10 11 12 13 15
+		std::cout << *it << ' ';			//5 5 6 7 10 11 12 13 15
 	}
 	std::cout << std::endl;
 

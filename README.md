@@ -16,6 +16,8 @@
 
 - 00zstl_iterator.h：定义一些迭代器相应属性，通过 iterator_traits 很容易萃取出迭代器的特性，distance_type、iterator_category、value_type 是对 iterator_traits 的封装，用于提取常用的迭代器属性
 
+- 00zstl_pair.h：用于关联容器等的键值对基本操作实现
+
 - 01zstl_vector.h：vector 具有 array 的优点同时又有许多高效的优化，主要优点有顺序存储、随机访问、动态扩容、预分配等，它的插入操作和删除操作容易导致迭代器的失效，它使用原生指针作为迭代器  
 
 - 02zstl_list.h：list作为一个双向链表对外表现，其内部实际是一个双向循环链表，初始状态时有一个空的节点组成双向循环链表。为了能融入STL算法，它必须使用定制的迭代器而不能使用原生的指针。由于 STL 的 sort 算法只接受随机迭代器，而list的迭代器是双向迭代器不支持随机访问，所有list需要自己实现排序算法，这里采用快速排序  

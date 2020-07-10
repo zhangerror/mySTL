@@ -99,6 +99,11 @@ __MYSTL_NAMESPACE_BEGIN_
 		}
 	};
 
+	inline __rb_tree_base_iterator::difference_type*
+		distance_type(const __rb_tree_base_iterator&) {
+		return (__rb_tree_base_iterator::difference_type*) 0;
+	}
+
 	//RB-tree 的正规迭代器
 	template <class Value, class Ref, class Ptr>
 	struct __rb_tree_iterator : public __rb_tree_base_iterator {
@@ -169,6 +174,7 @@ __MYSTL_NAMESPACE_BEGIN_
 		typedef ptrdiff_t			difference_type;
 		typedef typename __rb_tree_iterator<value_type, reference, pointer>::iterator iterator;
 		typedef typename __rb_tree_iterator<value_type, reference, pointer>::const_iterator const_iterator;
+
 	protected:
 		link_type get_node() { return rb_tree_node_allocator::allocate(); }
 		void put_node(link_type p) { rb_tree_node_allocator::deallocate(p); }
@@ -275,6 +281,12 @@ __MYSTL_NAMESPACE_BEGIN_
 		size_type size() const { return node_count; }
 		size_type max_size() const { return size_type(-1); }
 
+		void swap(rb_tree<Key, Value, KeyOfValue, Compare, Alloc>& t) {
+			std::swap(header, t.header);
+			std::swap(node_count, t.node_count);
+			std::swap(key_compare, t.key_compare);
+		}
+
 	private:
 		// insert / erase
 		iterator __insert(base_ptr x_, base_ptr y_, const Value& v);
@@ -282,11 +294,73 @@ __MYSTL_NAMESPACE_BEGIN_
 
 		link_type __copy(link_type x);
 
+		std::pair<iterator, iterator> equal_range(const Key& k) {
+			return std::pair<iterator, iterator>(lower_bound(k), upper_bound(k));
+		}
+		iterator lower_bound(const Key& k) {
+			link_type _y = header;		//最后一个 comp(nodeValue, k) 为假的节点
+			link_type _x = root();		//当前节点
+
+			while (_x) {
+				if (!key_compare(key(_x), k)) {
+					_y = _x;
+					_x = left(_x);
+				}
+				else {
+					_x = right(_x);
+				}
+			}
+
+			return iterator(_y);
+		}
+		iterator upper_bound(const Key& k) {
+			link_type _y = header;		//最后一个 comp(k, nodeValue) 为真的节点
+			link_type _x = root();		//当前节点
+
+			while (_x) {
+				if (key_compare(k, key(_x))) {
+					_y = _x;
+					_x = left(_x);
+				}
+				else {
+					_x = right(_x);
+				}
+			}
+
+			return iterator(_y);
+		}
+
 	public:
 		// insert / erase
 		std::pair<iterator, bool> insert_unique(const value_type& x);
+		template <class InputIterator>
+		void insert_unique(InputIterator first, InputIterator last) {
+			for (; first != last; ++first) {
+				insert_unique(*first);
+			}
+		}
+		iterator insert_unique(iterator position, const value_type& x);
+
 		iterator insert_equal(const value_type& x);
+		template <class InputIterator>
+		void insert_equal(InputIterator first, InputIterator last) {
+			for (; first != last; ++first) {
+				insert_equal(*first);
+			}
+		}
+		iterator insert_equal(iterator postion, const value_type& x);
+
+		//传入迭代器删除当前元素，传入值删除所有值为传入值的元素
 		void erase(iterator p);
+		void erase(const Key& x);
+		void erase(iterator first, iterator last) {
+			if (first == begin() && last == end()) {
+				clear();
+			}
+			else {
+				while (first != last) erase(first++);
+			}
+		}
 
 		iterator find(const Key& x);
 		size_type count(const Key& x) {
@@ -320,6 +394,43 @@ __MYSTL_NAMESPACE_BEGIN_
 		//以上，x 为新值插入点，y 为插入点的父节点，v 为新值
 	}
 
+	template<class Key, class Value, class KeyOfValue, class Compare, class Alloc>
+	typename rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::iterator
+		rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::insert_equal(iterator p, const value_type& v) {
+		if (p.node == header->left) { // begin()
+			if (!empty() && key_compare(key(p.node), KeyOfValue()(v))) {
+				return __insert(p.node, p.node, v);
+			}	//第一个参数必须是非空的
+			else {
+				return insert_equal(v);
+			}
+		}
+		else if (p.node == header) { // end()
+			if (key_compare(key(KeyOfValue()(v), rightmost()))) {
+				return __insert(0, rightmost(), v);
+			}
+			else {
+				return insert_equal(v);
+			}
+		}
+		else {
+			iterator before = p;
+			--before;
+			if (key_compare(KeyOfValue()(v), key(before.node))
+				&& key_compare(key(p.node), KeyOfValue()(v))) {
+				if (right(before.node) == 0) {
+					return insert(0, before.node, v);
+				}
+				else {
+					return insert(p.node, p.node, v);
+				} //第一个参数必须是非空的
+			}
+			else {
+				return insert_equal(v);
+			}
+		}
+	}
+	
 	//插入新值：节点键值不允许重复，若重复则插入无效
 	//注意，返回值是个 pair，第一元素是个 RB-tree 迭代器，指向新增节点，第二元素表示插入成功与否
 	template<class Key, class Value, class KeyOfValue, class Compare, class Alloc>
@@ -353,6 +464,43 @@ __MYSTL_NAMESPACE_BEGIN_
 
 		//进行至此，表示新值一定与树中键值重复，就不应该插入新值
 		return std::pair<iterator, bool>(j, false);
+	}
+
+	template<class Key, class Value, class KeyOfValue, class Compare, class Alloc>
+	typename rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::iterator
+		rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::insert_unique(iterator p, const value_type& v) {
+		if (p.node == header->left) { // begin()
+			if (!empty() && key_compare(KeyOfValue()(v), key(p.node))) {
+				return __insert(p.node, p.node, v);
+			} //第一个参数必须是非空的
+			else {
+				return insert_unique(v).first;
+			}
+		}
+		else if (p.node == header) { //end()
+			if (key_compare(key(rightmost()), KeyOfValue()(v))) {
+				return __insert(0, rightmost(), v);
+			}
+			else {
+				return insert_unique(v).first;
+			}
+		}
+		else {
+			iterator before = p;
+			--before;
+			if (key_compare(key(before.node), KeyOfValue()(v))
+				&& key_compare(KeyOfValue()(v), key(p.node))) {
+				if (right(before.node) == 0) {
+					return insert(0, before.node, v);
+				}
+				else {
+					return insert(p.node, p.node, v);
+				}//第一个参数必须是非空的
+			}
+			else {
+				return insert_unique(v).first;
+			}
+		}
 	}
 
 	//真正的插入执行程序 __insert()
@@ -502,10 +650,11 @@ __MYSTL_NAMESPACE_BEGIN_
 				_head = cur;
 				cur = left(cur);
 			}
-			else {
+			else /*if (key_compare(key(cur), x))*/{
 				//进行到这里，表示 cur 键值小于 x ，遇到小值就向左走
 				cur = right(cur);
 			}
+			//else { break; }
 		}
 
 		iterator j = iterator(_head);
@@ -546,25 +695,25 @@ __MYSTL_NAMESPACE_BEGIN_
 		base_ptr _x = nullptr;
 		base_ptr _x_parent = nullptr;
 
-		if (_y->left == nullptr) {
-			_x = _y->right;
+		if (_y->left == nullptr) {	// p 最多有一个非空子节点
+			_x = _y->right;			// _x 一定为空
 		}
 		else {
-			if (_y->right == 0) {
-				_x = _y->left;
+			if (_y->right == 0) {	// p 恰好有一个非空子节点
+				_x = _y->left;		// _x 不为空
 			}
-			else {
-				_y = _y->right;
+			else {					// p 左右孩子均不为空
+				_y = _y->right;		//将 _y 设置为 p 的孩子， _x 可能为空
 				while (_y->left) {
 					_y = _y->left;
 				}
 				_x = _y->right;
 			}
 		}
-		if (_y != p) {
+		if (_y != p) {				//重新链接，_y 替代 p，_y 是 p 的孩子
 			p->left->parent = _y;
 			_y->left = p->left;
-			if (_y != p->parent) {
+			if (_y != p->right) {
 				_x_parent = _y->parent;
 				if (_x) _x->parent = _y->parent;
 				_y->parent->left = _x;
@@ -586,8 +735,9 @@ __MYSTL_NAMESPACE_BEGIN_
 			_y->parent = p->parent;
 			std::swap(_y->color, p->color);
 			_y = p;
+			// _y 现在指向实际要删除的节点
 		}
-		else {
+		else {										// _y == p
 			_x_parent = _y->parent;
 			if (_x) _x->parent = _y->parent;
 			if (root == p) {
@@ -639,7 +789,7 @@ __MYSTL_NAMESPACE_BEGIN_
 						break;
 					}
 				}
-				else {
+				else {					// 同上，right <--> left
 					base_ptr _w = _x_parent->left;
 					if (_w->color == __rb_tree_red) {
 						_w->color = __rb_tree_black;
@@ -674,6 +824,16 @@ __MYSTL_NAMESPACE_BEGIN_
 			if (_x) _x->color = __rb_tree_black;
 		}
 		return _y;
+	}
+
+	template <class Key, class Value, class KeyOfValue, class Compare, class Alloc>
+	//typename rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::size_type
+		void rb_tree<Key, Value, KeyOfValue, Compare, Alloc>::erase(const Key& x) {
+		std::pair<iterator, iterator> _p = equal_range(x);
+		size_type _n = 0;
+		//distance(_p.first, _p.second, _n);
+		erase(_p.first, _p.second);
+		//return _n;
 	}
 
 	template <class Key, class Value, class KeyOfValue, class Compare, class Alloc>

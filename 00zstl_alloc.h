@@ -219,6 +219,17 @@ __MYSTL_NAMESPACE_BEGIN_
 		*my_free_list = q;
 	}
 
+	/* 空间重新配置函数 */
+	template<bool threads, int inst>
+	static void* __default_alloc_template<threads, inst>::reallocate(void* p, size_t old_sz, size_t new_sz) {
+		obj* volatile* my_free_list;
+
+		obj* result = malloc_alloc::reallocate(p, old_sz, new_sz);
+
+		*my_free_list = result->free_list_link;
+		return result;
+	}
+
 /* 重新填充free list，返回一个大小为 size 的内存块给客端使用，其余纳入自由链表 */
 /* size 已经增加至 8 的倍数，如果得到不止一个内存块则将其他内存块链接掉到 free list 上 */
 	template<bool threads, int inst>
@@ -320,7 +331,7 @@ __MYSTL_NAMESPACE_BEGIN_
 	}
 	#define __NODE_ALLOCATOR_THREADS false		//多线程环境
 
-	//设置第二季配置器为默认配置器
+	//设置第二级配置器为默认配置器
 	typedef __default_alloc_template<__NODE_ALLOCATOR_THREADS, 0> alloc;
 __MYSTL_NAMESPACE_END_
 

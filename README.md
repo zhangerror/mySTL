@@ -38,7 +38,9 @@
 
 - 00stl_RBTree.h：红黑树的实现：红黑树的数据结构、旋转、插入(键值不可重复的插入和键值可重复的插入)、删除、查找等。
 
-- 09stl_set.h：基于 RBTree 的关联容器，RBTree 提供了几乎所有 set 需要的操作，set 不允许键重复，使用 RBTree 的 unique 操作
+- 09stl_set.h：基于 RBTree 的关联容器，RBTree 提供了几乎所有 set 需要的操作，set 不允许键重复，使用 RBTree 的 unique 操作，键即为值，键值不可修改
+
+- 10stl_map.h：基于 RBTree 的关联容器，RBTree 提供了几乎所有 map 需要的操作，map 不允许键重复，使用 RBTree 的 unique 操作；map 的元素会根据元素的键被自动排序，可以修改节点的实值但不能修改其键； 可以通过键作为下标访问对应的值，当键不存在时以键和默认值作为 pair 插入。
 
 ## Enviroment
 - OS: Win10

@@ -46,6 +46,8 @@
 
 - 12zstl_hash_set：以 hashtable 为底层机制实现的关联容器 set ， 与基于 RBTree 的 set 不同的是此 set 没有自动排序功能。另， hashtable 无法处理的型别，hash_set 也无法处理
 
+- 13zstl_hash_multiset：同 hahs_set ，但允许键值重复
+
 ## Enviroment
 - OS: Win10
 - tool: VS2017

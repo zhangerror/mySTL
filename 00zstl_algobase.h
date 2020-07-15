@@ -1,18 +1,16 @@
 #ifndef _ZSTL_ALGOBASE_H_
 #define _ZSTL_ALGOBASE_H_
 
-/*
- *基本辅助算法、辅助类等
- */
+//基本算法
 
 #include <cstring>
-#include "00zstl_config.h"		//相关配置头文件
-#include "00zstl_iterator.h"	//迭代器型别相关
+#include "00zstl_config.h"
+#include "00zstl_iterator.h"
 
 
 __MYSTL_NAMESPACE_BEGIN_
 
-	/*	fill: 将[first, last) 内的所有元素改填新值	*/
+	/* fill: 将[first, last) 内的所有元素改填新值 */
 	template<class ForwardIterator, class T>
 	void fill(ForwardIterator first, ForwardIterator last, const T& value) {
 		for (; first != last; ++first) {	//迭代器走过整个区间
@@ -29,16 +27,47 @@ __MYSTL_NAMESPACE_BEGIN_
 		return first;
 	}
 
-	/*	max	*/
+	/* max、 min */
 	template<class T>
 	inline const T& max(const T& a, const T& b) {
-		return (a < b) ? b : a;		//注意用 < 降低对操作数类型支持操作的要求
+		return (a < b) ? b : a;
+	}
+	template<class T, class Compare>
+	inline const T& max(const T& a, const T& b, Compare comp) {
+		return comp(a, b) ? b : a;
 	}
 
-	/*	min	*/
 	template<class T>
 	inline const T& min(const T& a, const T& b) {
-		return (a < b) ? a : b;		//注意用 < 降低对操作数类型支持操作的要求
+		return (a < b) ? a : b;
+	}
+	template<class T, class Compare>
+	inline const T& min(const T& a, const T& b, Compare comp) {
+		return comp(b, a) ? b : a;
+	}
+
+	/* mismatch：用来平行比较两个序列，指处两者之间的第一个不匹配点，返回一对迭代器，分别指向两序列中的不匹配点 */
+	template <class InputIterator1, class InputIterator2>
+	pair<InputIterator1, InputIterator2> mismatch(InputIterator1 first1,
+		InputIterator1 last1,
+		InputIterator2 first2) {
+		while (first1 != last1 && *first1 == *first2) {
+			++first1;
+			++first2;
+		}
+		return pair<InputIterator1, InputIterator2>(first1, first2);
+	}
+
+	template <class InputIterator1, class InputIterator2, class BinaryPredicate>
+	pair<InputIterator1, InputIterator2> mismatch(InputIterator1 first1,
+		InputIterator1 last1,
+		InputIterator2 first2,
+		BinaryPredicate binary_pred) {
+		while (first1 != last1 && binary_pred(*first1, *first2)) {
+			++first1;
+			++first2;
+		}
+		return pair<InputIterator1, InputIterator2>(first1, first2);
 	}
 
 
@@ -85,9 +114,7 @@ __MYSTL_NAMESPACE_BEGIN_
 		}
 	};
 
-	/* 这里必须兵分两路来探讨：__copy_dispatch() 的完全泛化版本根据迭代器种类的不同调用了 */
-	/* 不同的 __copy()，为的是不同种类的迭代器使用的循环条件不同，有快慢之分。 */
-
+	/* __copy_dispatch() 的完全泛化版本根据迭代器种类的不同调用了不同的 __copy()，为的是不同种类的迭代器使用的循环条件不同，有快慢之分。 */
 	/* InputIterator 版本 */
 	template<class InputIterator, class OutputIterator>
 	inline OutputIterator __copy(InputIterator first, InputIterator last, OutputIterator result, input_iterator_tag) {
@@ -140,9 +167,6 @@ __MYSTL_NAMESPACE_BEGIN_
 			--dest;
 		}
 	}
-
-
-
 
 	/* lower_bound（应用于有序区间） */
 		//版本一辅助函数的 forward_iterator 版本
@@ -263,16 +287,14 @@ __MYSTL_NAMESPACE_BEGIN_
 	}
 
 
-	/* unary_function 用来呈现一元函数的参数行别和返回值型别 */
-		/* 每一个一元函数都应该继承此类别 */
+	/* unary_function 用来呈现一元函数的参数行别和返回值型别, 每一个一元函数都应该继承此类别 */
 	template<class Arg, class Result>
 	struct unary_function {
 		typedef Arg argument_type;
 		typedef Result result_type;
 	};
 
-	/* binaty_function 用来呈现二元函数的第一参数型别、第二参数型别和返回值型别 */
-		/* 每一个二元函数都应该继承此类别 */
+	/* binaty_function 用来呈现二元函数的第一参数型别、第二参数型别和返回值型别, 每一个二元函数都应该继承此类别 */
 	template<class Arg1, class Arg2, class Result>
 	struct binary_function {
 		typedef Arg1 first_argument_type;
@@ -280,14 +302,12 @@ __MYSTL_NAMESPACE_BEGIN_
 		typedef Result result_type;
 	};
 
-
-
 	template<class T>
 	struct negate : public unary_function<T, T> {
 		T operator()(const T& x) const { return -x; }
 	};
 
-	/* 以下为 + - * / % 的仿函数 */
+	/* + - * / % 的仿函数 */
 	template<class T>
 	struct plus : public binary_function<T, T, T> {
 		T operator()(const T& x, const T& y) const { return x + y; }

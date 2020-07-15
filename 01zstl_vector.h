@@ -67,6 +67,7 @@ __MYSTL_NAMESPACE_BEGIN_
 		}
 	public:
 		iterator begin() { return start; }
+		const_iterator begin() const { return start; }
 		iterator end() { return finish;  }
 		size_type size() const { return size_type(finish - start); }
 		size_type capacity() const {
@@ -74,7 +75,7 @@ __MYSTL_NAMESPACE_BEGIN_
 		}
 		bool empty() const { return (size() == 0); }
 		reference operator[](size_type n) { return *(begin() + n); }
-		//iterator operator[](size_type n) { return *(begin() + n); }
+		const_reference operator[](size_type n) const { return *(begin() + n); }
 		vector<T, Alloc>& operator=(const vector<T, Alloc>& x);
 
 		vector() : start(0), finish(0), end_of_storage(0) { }

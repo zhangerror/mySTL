@@ -256,29 +256,10 @@ __MYSTL_NAMESPACE_BEGIN_
 		return first;
 	}
 
-	/* upper_bound 版本1 */
+	/* upper_bound */
 	template<class ForwarIterator, class T>
 	inline ForwarIterator upper_bound(ForwarIterator first, ForwarIterator last, const T& value) {
 		return __upper_bound(first, last, value, distance_type(first), iterator_category(first));
-	}
-
-	/* upper_bound 版本2 */
-		/*template<class ForwarIterator, class T, class Compare>
-		inline ForwarIterator upper_bound(ForwarIterator first, ForwarIterator last, const T& value, Compare comp) {
-			return __upper_bound(first, last, value, comp, distance_type(first), iterator_category(first));
-		}*/
-
-
-
-
-		/* 以下找出质数数组中最接近且不小于 n 的质数 */
-	inline size_t __stl_next_prime(size_t n) {
-		const unsigned long* first = __stl_prime_list;
-		const unsigned long* last = __stl_prime_list + __stl_nun_primes;
-
-		const unsigned long* pos = upper_bound(first, last, n);
-		//以上 lower_bound 是泛型算法，适用于非降序区间
-		return (pos == last) ? *(last - 1) : *pos;
 	}
 
 
@@ -371,12 +352,6 @@ __MYSTL_NAMESPACE_BEGIN_
 	struct project2nd : public binary_function<Arg1, Arg2, Arg2> {
 		Arg2 operator()(const Arg1&, const Arg2& y) { return y; }
 	};
-
-
-	/*template<class Key>
-	struct hash {
-		Key operator()(const Key& key) { return key; }
-	};*/
 
 	template<class T>
 	struct equal_to {

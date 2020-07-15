@@ -1,10 +1,8 @@
 #ifndef _ZSTL_VECTOR_H_
 #define _ZSTL_VECTOR_H_
 
-//#include "zstl_config.h"
 #include "00zstl_alloc.h"
 #include "00zstl_construct.h"
-#include "00zstl_algobase.h"
 
 __MYSTL_NAMESPACE_BEGIN_
 
@@ -12,13 +10,15 @@ __MYSTL_NAMESPACE_BEGIN_
 	class vector {
 	public:
 		// vector的嵌套型别定义
-		typedef T			value_type;
-		typedef value_type*	pointer;
-		typedef value_type*	iterator;
-		typedef value_type&	reference;
+		typedef T					value_type;
+		typedef value_type*			pointer;
+		typedef const value_type*	const_pointer;
+		typedef value_type*			iterator;
+		typedef const value_type*	const_iterator;
+		typedef value_type&			reference;
 		typedef const value_type&	const_reference;
-		typedef size_t		size_type;
-		typedef ptrdiff_t	difference_type;
+		typedef size_t				size_type;
+		typedef ptrdiff_t			difference_type;
 	protected:
 		typedef simple_alloc<value_type, Alloc> data_allocator;
 
@@ -53,6 +53,18 @@ __MYSTL_NAMESPACE_BEGIN_
 
 			end_of_storage = start + ROUND_UP(n * sizeof(value_type)) / sizeof(value_type);
 		}
+
+		template<class ForwardIterator>
+		iterator __allocate_and_copy(size_type n, ForwardIterator first, ForwardIterator last) {
+			iterator result = data_allocator::allocate(n);
+			try {
+				uninitialized_copy(first, last, result);
+				return result;
+			}
+			catch (...) {
+				data_allocator::deallocate(result, n);
+			}
+		}
 	public:
 		iterator begin() { return start; }
 		iterator end() { return finish;  }
@@ -62,6 +74,8 @@ __MYSTL_NAMESPACE_BEGIN_
 		}
 		bool empty() const { return (size() == 0); }
 		reference operator[](size_type n) { return *(begin() + n); }
+		//iterator operator[](size_type n) { return *(begin() + n); }
+		vector<T, Alloc>& operator=(const vector<T, Alloc>& x);
 
 		vector() : start(0), finish(0), end_of_storage(0) { }
 		vector(size_type n, const T& value) { fill_initialize(n, value); }
@@ -135,9 +149,50 @@ __MYSTL_NAMESPACE_BEGIN_
 			}
 		}
 		void resize(size_type new_size) { resize(new_size, T()); }
-		void swap(vector<T, Alloc>& vec) {	}
+		void swap(vector<T, Alloc>& vec) {	
+			std::swap(start, vec.start);
+			std::swap(finish, vec.finish);
+			std::swap(end_of_storage, vec.end_of_storage);
+		}
 		void clear() {	erase(begin(), end());	}
+
+		void reserve(size_type n) {
+			if (capacity() < n) {
+				const size_type old_size = size();
+				iterator tmp = __allocate_and_copy(n, start, finish);
+				destroy(start, finish);
+				data_allocator::deallocate(start, end_of_storage - start);
+				start = tmp;
+				finish = tmp + old_size;
+				end_of_storage = start + n;
+			}
+		}
 	};		//end of class vector
+
+	template <class T, class Alloc>
+	vector<T, Alloc>&
+		vector<T, Alloc>::operator=(const vector<T, Alloc>& x) {
+		if (&x != this) {
+			const size_type x_len = x.size();
+			if (x_len > capacity()) {
+				iterator tmp = __allocate_and_copy(x_len, x.begin(), x.end());
+				destroy(start, finish);
+				deallocate(start, end_of_storage-start);
+				start = tmp;
+				end_of_storage = start + x_len;
+			}
+			else if (size() >= x_len) {
+				iterator i = copy(x.begin(), x.end(), begin());
+				destroy(i, finish);
+			}
+			else {
+				copy(x.begin(), x.begin() + size(), start);
+				uninitialized_copy(x.begin() + size(), x.end(), finish);
+			}
+			finish = start + x_len;
+		}
+		return *this;
+	}
 
 	template <class T, class Alloc> 
 	void vector<T, Alloc>::insert_aux(iterator position, const T& x) {
@@ -244,6 +299,49 @@ __MYSTL_NAMESPACE_BEGIN_
 	void vector<T, Alloc>::insert(iterator position, const T& x) {
 		insert(position, 1, x);
 	}
+
+	template<class T, class Alloc>
+	inline bool
+		operator==(const vector<T, Alloc>& x, const vector<T, Alloc>& y) {
+		return x.size() == y.size() && std::equal(x.begin(), x.end(), y.begin());
+	}
+
+	template<class T, class Alloc>
+	inline bool
+		operator<(const vector<T, Alloc>& x, const vector<T, Alloc>& y) {
+		return std::lexicographical_compare(x.begin(), x.end(),	y.begin(), y.end());
+	}
+
+	template<class T, class Alloc>
+	inline void 
+		swap(const vector<T, Alloc>& x, const vector<T, Alloc>& y) {
+		x.swap(y);
+	}
+
+	template<class T, class Alloc>
+	inline bool
+		operator!=(const vector<T, Alloc>& x, const vector<T, Alloc>& y) {
+		return !(x == y);
+	}
+
+	template<class T, class Alloc>
+	inline bool
+		operator>(const vector<T, Alloc>& x, const vector<T, Alloc>& y) {
+		return y < x;
+	}
+
+	template<class T, class Alloc>
+	inline bool
+		operator<=(const vector<T, Alloc>& x, const vector<T, Alloc>& y) {
+		return !(y < x);
+	}
+
+	template<class T, class Alloc>
+	inline bool
+		operator>=(const vector<T, Alloc>& x, const vector<T, Alloc>& y) {
+		return !(x < y);
+	}
+
 __MYSTL_NAMESPACE_END_
 
 #endif // !_ZSTL_VECTOR_H_

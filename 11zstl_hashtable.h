@@ -474,6 +474,8 @@ __MYSTL_NAMESPACE_BEGIN_
 
 		void copy_from(const hashtable& ht);
 
+		value_type find_or_insert(const value_type& obj);
+
 		iterator find(const key_type& key) {
 			size_type n = bkt_num_key(key);			//先寻找落在哪一个 bucket 内
 			node* first;
@@ -603,6 +605,25 @@ __MYSTL_NAMESPACE_BEGIN_
 		buckets[n] = tmp;
 		++num_elements;					//节点个数累加1
 		return iterator(tmp, this);		//返回一个迭代器，指向新增节点
+	}
+	template <class V, class K, class HF, class Ex, class Eq, class A>
+	typename hashtable<V, K, HF, Ex, Eq, A>::value_type
+		hashtable<V, K, HF, Ex, Eq, A>::find_or_insert(const value_type& obj)
+	{
+		resize(num_elements + 1);
+
+		size_type n = bkt_num(obj);
+		node* first = buckets[n];
+
+		for (node* cur = first; cur; cur = cur->next)
+			if (equals(get_key(cur->val), get_key(obj)))
+				return cur->val;
+
+		node* tmp = new_node(obj);
+		tmp->next = first;
+		buckets[n] = tmp;
+		++num_elements;
+		return tmp->val;
 	}
 
 	template <class V, class K, class HF, class Ex, class Eq, class A>

@@ -1,15 +1,15 @@
-#ifndef _ZSTL_HASH_SET_H_
-#define _ZSTL_HASH_SET_H_
+#ifndef _ZSTL_HASH_MULTISET_H_
+#define _ZSTL_HASH_MULTISET_H_
 
 #include "11zstl_hashtable.h"
 
 __MYSTL_NAMESPACE_BEGIN_
-	
-	template<class Value,
-			class HashFcn = hash<Value>,
-			class EqualKey = equal_to<Value>,
-			class Alloc = alloc>
-	class hash_set {
+
+template<class Value,
+	class HashFcn = hash<Value>,
+	class EqualKey = equal_to<Value>,
+	class Alloc = alloc>
+	class hash_multiset {
 	private:
 		typedef hashtable<Value, Value, HashFcn, identity<Value>, EqualKey, Alloc> ht;
 		ht rep;		//底层机制以 hashtable 完成
@@ -35,27 +35,27 @@ __MYSTL_NAMESPACE_BEGIN_
 
 	public:
 		//缺省使用大小为100的表格，将被 hashtable 调整为最接近且较大的质数
-		hash_set() :rep(100, hasher(), key_equal()) { }
-		explicit hash_set(size_type n) :rep(n, hasher(), key_equal()) { }
-		hash_set(size_type n, const hasher& hf) :rep(n, hf, key_equal()) { }
-		hash_set(size_type n, const hasher& hf, const key_equal& eql) :rep(n, hf, eql) { }
+		hash_multiset() :rep(100, hasher(), key_equal()) { }
+		explicit hash_multiset(size_type n) :rep(n, hasher(), key_equal()) { }
+		hash_multiset(size_type n, const hasher& hf) :rep(n, hf, key_equal()) { }
+		hash_multiset(size_type n, const hasher& hf, const key_equal& eql) :rep(n, hf, eql) { }
 
 		//以下，插入操作全部使用 insert_unique()，不允许简直重复
 		template<class InputIterator>
-		hash_set(InputIterator f, InputIterator l) : rep(100, hasher(), key_equal()) {
-			rep.insert_unique(f, l);
+		hash_multiset(InputIterator f, InputIterator l) : rep(100, hasher(), key_equal()) {
+			rep.insert_equal(f, l);
 		}
 		template<class InputIterator>
-		hash_set(InputIterator f, InputIterator l, size_type n) : rep(n, hasher(), key_equal()) {
-			rep.insert_unique(f, l);
+		hash_multiset(InputIterator f, InputIterator l, size_type n) : rep(n, hasher(), key_equal()) {
+			rep.insert_equal(f, l);
 		}
 		template<class InputIterator>
-		hash_set(InputIterator f, InputIterator l, size_type n, const hasher& hf) : rep(n, hf, key_equal()) {
-			rep.insert_unique(f, l);
+		hash_multiset(InputIterator f, InputIterator l, size_type n, const hasher& hf) : rep(n, hf, key_equal()) {
+			rep.insert_equal(f, l);
 		}
 		template<class InputIterator>
-		hash_set(InputIterator f, InputIterator l, size_type n, const hasher& hf, const key_equal& eql) : rep(n, hf, eql) {
-			rep.insert_unique(f, l);
+		hash_multiset(InputIterator f, InputIterator l, size_type n, const hasher& hf, const key_equal& eql) : rep(n, hf, eql) {
+			rep.insert_equal(f, l);
 		}
 
 	public:
@@ -63,7 +63,7 @@ __MYSTL_NAMESPACE_BEGIN_
 		size_type size() const { return rep.size(); }
 		size_type max_size() const { return rep.max_size(); }
 		bool empty() const { return rep.empty(); }
-		void swap(hash_set& hs) { rep.swap(hs.rep); }
+		void swap(hash_multiset& hs) { rep.swap(hs.rep); }
 
 		bool operator==(const typename ht::iterator& right) const {
 			return *this == right;
@@ -71,23 +71,21 @@ __MYSTL_NAMESPACE_BEGIN_
 		bool operator!=(const typename ht::iterator& right) const {
 			return (!(*this == right));
 		}
-		friend bool operator== (const hash_set&, const hash_set&);
+		friend bool operator== (const hash_multiset&, const hash_multiset&);
 
 		iterator begin() { return rep.begin(); }
 		iterator end() { return rep.end(); }
 
 	public:
-		pair<iterator, bool> insert(const value_type& obj) {
-			pair<typename ht::iterator, bool> p = rep.insert_unique(obj);
-			return pair<iterator, bool>(p.first, p.second);
+		iterator insert(const value_type& obj) {
+			return rep.insert_equal(obj);
 		}
 		template<class InputIterator>
 		void insert(InputIterator f, InputIterator l) {
-			rep.insert_unique(f, l);
+			rep.insert_equal(f, l);
 		}
-		pair<iterator, bool> insert_noresize(const value_type& obj) {
-			pair<typename ht::iterator, bool> p = rep.insert_unique_noresize(obj);
-			return pair<iterator, bool>(p.first, p.second);
+		iterator insert_noresize(const value_type& obj) {
+			return rep.insert_equal_noresize(obj);
 		}
 
 		iterator find(const key_type& key) { return rep.find(key); }
@@ -108,14 +106,14 @@ __MYSTL_NAMESPACE_BEGIN_
 		size_type elems_in_bucket(size_type n) const {
 			return rep.elems_in_bucket(n);
 		}
-	};
+};
 
-	template <class Value, class HashFcn, class EqualKey, class Alloc>
-	inline bool operator==(const hash_set<Value, HashFcn, EqualKey, Alloc>& hs1,
-		const hash_set<Value, HashFcn, EqualKey, Alloc>& hs2) {
-		return hs1.rep == hs2.rep;
-	}
+template <class Value, class HashFcn, class EqualKey, class Alloc>
+inline bool operator==(const hash_multiset<Value, HashFcn, EqualKey, Alloc>& hs1,
+	const hash_multiset<Value, HashFcn, EqualKey, Alloc>& hs2) {
+	return hs1.rep == hs2.rep;
+}
 
 __MYSTL_NAMESPACE_END_
 
-#endif // !_ZSTL_HASH_SET_H_
+#endif // !_ZSTL_HASH_MULTISET_H_

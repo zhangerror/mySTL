@@ -761,12 +761,14 @@ __MYSTL_NAMESPACE_BEGIN_
 			while (_x != root && (_x == 0 || _x->color == __rb_tree_black)) {
 				if (_x == _x_parent->left) {
 					base_ptr _w = _x_parent->right;
+					// 兄弟节点是红的
 					if (_w->color == __rb_tree_red) {
 						_w->color = __rb_tree_black;
 						_x_parent->color = __rb_tree_red;
 						__rb_tree_rotate_left(_x_parent, root);
 						_w = _x_parent->right;
 					}
+					// 两个侄子节点都是黑的(空的也是黑的)
 					if ((_w->left == 0 ||
 							_w->left->color == __rb_tree_black) &&
 						(_w->right == 0 ||
@@ -775,7 +777,9 @@ __MYSTL_NAMESPACE_BEGIN_
 						_x = _x_parent;
 						_x_parent = _x_parent->parent;
 					}
+					// 两个侄子有红的
 					else {
+						// 右侄子是黑的
 						if (_w->right == 0 ||
 							_w->right->color == __rb_tree_black) {
 							if (_w->left) _w->left->color = __rb_tree_black;
